@@ -1,0 +1,74 @@
+;
+; keylogger.inf
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = Keyboard ; TODO: specify appropriate Class
+ClassGuid   = {4d36e96b-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider    = %ManufacturerName%
+CatalogFile = keylogger.cat
+DriverVer   = 01/01/2025,1.0.0.0; TODO: set DriverVer in stampinf property pages
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+keylogger.sys = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName% = Standard,NT$ARCH$.10.0...16299 ; %13% support introduced in build 16299
+
+[Standard.NT$ARCH$.10.0...16299]
+%keylogger.DeviceDesc% = keylogger_Device, ACPI\VEN_PNP&DEV_0303 ; TODO: edit hw-id
+
+[keylogger_Device.NT]
+Include = keyboard.inf
+Needs   = STANDARD_Inst
+CopyFiles = File_Copy
+
+[File_Copy]
+keylogger.sys
+
+[keylogger_Device.NT.HW]
+Include = keyboard.inf
+Needs   = STANDARD_Inst.HW
+AddReg = keylogger_Device_AddReg
+
+[keylogger_Device_AddReg]
+HKR,,"UpperFilters",0x00010008,"keylogger"
+
+;-------------- Service installation
+[keylogger_Device.NT.Services]
+Include = keyboard.inf
+Needs   = STANDARD_Inst.Services
+AddService = keylogger, , keylogger_Service_Inst
+
+; -------------- keylogger driver install sections
+[keylogger_Service_Inst]
+DisplayName    = %keylogger.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\keylogger.sys
+
+[keylogger_Device.NT.Wdf]
+KmdfService = keylogger, keylogger_wdfsect
+
+[keylogger_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "keylogger Installation Disk"
+keylogger.DeviceDesc = "keylogger Device"
+keylogger.SVCDESC = "keylogger Service"
